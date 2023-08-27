@@ -1284,6 +1284,10 @@ class Instrument(Model):
         minimum_trailing_stop_distance: :class:`~async_v20.DecimalNumber`
             The minimum trailing stop distance allowed for a trailing
             stop loss created for this instrument. Specified in price units.
+        minimum_guaranteed_stop_loss_distance: :class:`~async_v20.DecimalNumber`
+            The minimum distance allowed between the Trade’s fill price and the
+            configured price for guaranteed Stop Loss Orders created for this
+            instrument. Specified in price units.
         maximum_position_size: :class:`~async_v20.DecimalNumber`
             The maximum position size allowed for this instrument. Specified in units.
         maximum_order_units: :class:`~async_v20.DecimalNumber`
@@ -1293,6 +1297,11 @@ class Instrument(Model):
             The margin rate for this instrument.
         commission: :class:`~async_v20.InstrumentCommission`
             The commission structure for this instrument.
+        guaranteed_stop_loss_order_execution_premium: :class:`~async_v20.DecimalNumber`
+            The amount that is charged to the account if a guaranteed Stop Loss Order
+            is triggered and filled. The value is in price units and is charged for
+            each unit of the Trade. This field will only be present if the Account’s
+            guaranteedStopLossOrderMode for this Instrument is not ‘DISABLED’.
         guaranteed_stop_loss_order_level_restriction: :class: `~async_v20.GuaranteedStopLossOrderLevelRestriction`
             The total position size that can exist within a given price window for Trades with a guaranteed Stop Loss Orders
             attached for a specific Instrument
@@ -1302,13 +1311,22 @@ class Instrument(Model):
 
     """
 
-    def __init__(self, name: InstrumentName = sentinel, type: InstrumentType = sentinel, display_name: str = sentinel,
-                 pip_location: int = sentinel, display_precision: int = sentinel, trade_units_precision: int = sentinel,
-                 minimum_trade_size: DecimalNumber = sentinel, maximum_trailing_stop_distance: DecimalNumber = sentinel,
+    def __init__(self,
+                 name: InstrumentName = sentinel, 
+                 type: InstrumentType = sentinel,
+                 display_name: str = sentinel,
+                 pip_location: int = sentinel,
+                 display_precision: int = sentinel,
+                 trade_units_precision: int = sentinel,
+                 minimum_trade_size: DecimalNumber = sentinel,
+                 maximum_trailing_stop_distance: DecimalNumber = sentinel,
+                 minimum_guaranteed_stop_loss_distance: DecimalNumber = sentinel,
                  minimum_trailing_stop_distance: DecimalNumber = sentinel,
                  maximum_position_size: DecimalNumber = sentinel,
-                 maximum_order_units: DecimalNumber = sentinel, margin_rate: DecimalNumber = sentinel,
+                 maximum_order_units: DecimalNumber = sentinel,
+                 margin_rate: DecimalNumber = sentinel,
                  commission: InstrumentCommission = sentinel,
+                 guaranteed_stop_loss_order_execution_premium: DecimalNumber = sentinel,
                  guaranteed_stop_loss_order_level_restriction: GuaranteedStopLossOrderLevelRestriction = sentinel,
                  guaranteed_stop_loss_order_mode: GuaranteedStopLossOrderMode = sentinel,
                  tags: ArrayDict = sentinel, financing: object = sentinel):

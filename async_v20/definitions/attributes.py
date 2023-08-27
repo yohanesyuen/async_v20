@@ -181,6 +181,8 @@ instance_attributes = {'long': 'long', 'short': 'short', 'default': 'default', '
                        'dividend': 'dividend',
                        'dividendAdjustment': 'dividend_adjustment',
                        'financing': 'financing',
+                       'minimumGuaranteedStopLossDistance': 'minimum_guaranteed_stop_loss_distance',
+                       'guaranteedStopLossOrderExecutionPremium': 'guaranteed_stop_loss_order_execution_premium',
                        }
 
 json_attributes = {'long': 'long', 'short': 'short', 'default': 'default', 'reduce_first': 'reduceFirst',
@@ -278,5 +280,7 @@ json_attributes = {'long': 'long', 'short': 'short', 'default': 'default', 'redu
                    'initial_margin_required':'initialMarginRequired',
                    'dividend': 'dividend',
                    'dividend_adjustment': 'dividendAdjustment',
-                   'financing': 'financing'
+                   'financing': 'financing',
+                   'minimum_guaranteed_stop_loss_distance': 'minimumGuaranteedStopLossDistance',
+                   'guaranteed_stop_loss_order_execution_premium': 'guaranteedStopLossOrderExecutionPremium'
                    }

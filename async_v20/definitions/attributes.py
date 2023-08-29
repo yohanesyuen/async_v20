@@ -182,7 +182,7 @@ instance_attributes = {'long': 'long', 'short': 'short', 'default': 'default', '
                        'dividendAdjustment': 'dividend_adjustment',
                        'financing': 'financing',
                        'minimumGuaranteedStopLossDistance': 'minimum_guaranteed_stop_loss_distance',
-                       'guaranteedStopLossOrderExecutionPremium': 'guaranteed_stop_loss_order_execution_premium',
+                       'guaranteedStopLossOrderExecutionPremium': 'guaranteed_stop_loss_order_execution_premium'
                        }
 
 json_attributes = {'long': 'long', 'short': 'short', 'default': 'default', 'reduce_first': 'reduceFirst',

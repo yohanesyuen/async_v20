@@ -19,7 +19,8 @@ __all__ = ['Account', 'AccountChanges', 'AccountChangesState', 'AccountPropertie
            'MarketOrderRejectTransaction', 'MarketOrderRequest', 'MarketOrderTradeClose', 'MarketOrderTransaction',
            'OpenTradeFinancing', 'Order', 'OrderBook', 'OrderBookBucket', 'OrderCancelRejectTransaction',
            'OrderCancelTransaction', 'OrderClientExtensionsModifyRejectTransaction',
-           'OrderClientExtensionsModifyTransaction', 'OrderFillTransaction', 'OrderIdentifier', 'OrderRequest',
+           'OrderClientExtensionsModifyTransaction', 'ConversionFactor', 'HomeConversionFactors',
+           'OrderFillTransaction', 'OrderIdentifier', 'OrderRequest',
            'Position', 'PositionBook', 'PositionBookBucket', 'PositionFinancing', 'PositionSide', 'Price',
            'PriceBucket', 'PricingHeartbeat', 'QuoteHomeConversionFactors', 'ReopenTransaction',
            'ResetResettablePLTransaction', 'StopLossDetails', 'StopLossOrder', 'StopLossOrderRejectTransaction',
@@ -983,6 +984,7 @@ class Order(Model):
                  margin_closeout: MarketOrderMarginCloseout = sentinel,
                  delayed_trade_close: MarketOrderDelayedTradeClose = sentinel,
                  trigger_distance: PriceValue = sentinel, is_trigger_distance_exact: bool = sentinel,
+                 trigger_mode: str = sentinel,
                  guaranteed: bool = sentinel
                  ):
         Model.__init__(**locals())
@@ -1148,6 +1150,7 @@ class Transaction(Model):
             Transactions in the same batch are applied to the Account simultaneously.
         request_id: :class:`~async_v20.RequestID`
             The Request ID of the request which generated the transaction.
+        trigger_mode: :class:`str`
 
     """
 
@@ -1192,7 +1195,8 @@ class Transaction(Model):
                  partial_fill: str = sentinel,
                  guaranteed: bool = sentinel,
                  requested_units: AccountUnits = sentinel,
-                 full_vwap: DecimalNumber = sentinel):
+                 full_vwap: DecimalNumber = sentinel,
+                 trigger_mode: str = sentinel):
         Model.__init__(**locals())
 
 
@@ -2495,6 +2499,8 @@ class Trade(Model):
             The IDs of the Transactions that have closed portions of this Trade.
         financing: :class:`~async_v20.AccountUnits`
             The financing paid/collected for this Trade.
+        dividend_adjustment: :class:`~async_v20.AccountUnits`
+            The dividend adjustment paid for this Trade.
         close_time: :class:`~async_v20.DateTime`
             The date/time when the Trade was fully closed.
             Only provided for Trades whose state is CLOSED.
@@ -2509,6 +2515,7 @@ class Trade(Model):
         trailing_stop_loss_order: :class:`~async_v20.TrailingStopLossOrder`
             Full representation of the Trade's Trailing Stop Loss
             Order, only provided if such an Order exists.
+        triggerMode: str
         margin_used:
             Margin currently used by the Trade.
 
@@ -2520,9 +2527,10 @@ class Trade(Model):
                  current_units: DecimalNumber = sentinel, realized_pl: AccountUnits = sentinel,
                  unrealized_pl: AccountUnits = sentinel, average_close_price: PriceValue = sentinel,
                  closing_transaction_ids: ArrayTransactionID = sentinel, financing: AccountUnits = sentinel,
-                 close_time: DateTime = sentinel, client_extensions: ClientExtensions = sentinel,
+                 dividend_adjustment: AccountUnits = sentinel, close_time: DateTime = sentinel,
+                 client_extensions: ClientExtensions = sentinel,
                  take_profit_order: TakeProfitOrder = sentinel, stop_loss_order: StopLossOrder = sentinel,
-                 trailing_stop_loss_order: TrailingStopLossOrder = sentinel,
+                 trailing_stop_loss_order: TrailingStopLossOrder = sentinel, triggerMode: str = sentinel,
                  margin_used: AccountUnits = sentinel):
         Model.__init__(**locals())
 
@@ -3676,6 +3684,43 @@ class StopOrder(Order, type=OrderType('STOP')):
                  replaced_by_order_id: OrderID = sentinel):
         Model.__init__(**locals())
 
+class ConversionFactor(Model):
+    """A ConversionFactor contains information used to convert an amount, from
+    an Instrument's base or quote currency, to the home currency of an Account.
+
+    Attributes:
+        factor: :class:`~async_v20.DecimalNumber`
+            The conversion factor to use for an amount in the specified
+            instrument's quote currency to an amount in the Account's home currency.
+    """
+    def __init__(self, factor: DecimalNumber = sentinel):
+        Model.__init__(**locals())
+
+class HomeConversionFactors(Model):
+    """A HomeConversionFactors message contains information used to convert
+    amounts, from an Instrument's base or quote currency, to the home currency
+    of an Account.
+    Attributes:
+        gain_quote_home: :class:`~async_v20.ConversionFactor`
+            The ConversionFactor in effect for the Account for converting any
+            gains realized in Instrument quote units into units of the
+            Account's home currency.
+        loss_quote_home: :class:`~async_v20.ConversionFactor`
+            The ConversionFactor in effect for the Account for converting any
+            losses realized in Instrument quote units into units of the
+            Account's home currency.
+        gain_base_home: :class:`~async_v20.ConversionFactor`
+            The ConversionFactor in effect for the Account for converting any
+            gains realized in Instrument base units into units of the
+            Account's home currency.
+        loss_base_home: :class:`~async_v20.ConversionFactor`
+            The ConversionFactor in effect for the Account for converting any
+            losses realized in Instrument base units into units of the
+            Account's home currency.
+    """
+    def __init__(self, gain_quote_home: ConversionFactor = sentinel, loss_quote_home: ConversionFactor = sentinel,
+                 gain_base_home: ConversionFactor = sentinel, loss_base_home: ConversionFactor = sentinel):
+        Model.__init__(**locals())
 
 class OrderFillTransaction(Transaction, type=TransactionType('ORDER_FILL')):
     """An OrderFillTransaction represents the filling of an Order in the client's
@@ -3712,6 +3757,8 @@ class OrderFillTransaction(Transaction, type=TransactionType('ORDER_FILL')):
             This is the conversion factor in effect for the Account at the time of
             the OrderFill for converting any losses realized in Instrument quote
             units into units of the Account’s home currency.
+        home_conversion_factors: :class:`~async_v20.HomeConversionFactors`
+            The HomeConversionFactors in effect at the time of the OrderFill.
         price: :class:`~async_v20.PriceValue`
             The average market price that the Order was filled at.
         full_price: :class:`~async_v20.PriceValue`
@@ -3720,16 +3767,25 @@ class OrderFillTransaction(Transaction, type=TransactionType('ORDER_FILL')):
             The reason that an Order was filled
         pl: :class:`~async_v20.AccountUnits`
             The profit or loss incurred when the Order was filled.
+        quote_pl: :class:`~async_v20.DecimalNumber`
+            The profit or loss incurred when the Order was filled, in the Instrument's quote currency.
         financing: :class:`~async_v20.AccountUnits`
             The financing paid or collected when the Order was filled.
+        base_financing: :class:`~async_v20.DecimalNumber`
+            The financing paid or collected when the Order was filled, in the Instrument's base currency.
+        quote_financing: :class:`~async_v20.DecimalNumber`
+            The financing paid or collected when the Order was filled, in the Instrument's quote currency.
         commission: :class:`~async_v20.AccountUnits`
             The commission charged in the Account's home currency as a result of filling the Order. The
             commission is
             always represented as a positive quantity of the Account's home currency, however it reduces the balance in
             the Account.
-        guaranteed_execution_fee:
+        guaranteed_execution_fee: :class:`~async_v20.AccountUnits`
             The total guaranteed execution fees charged for all Trades opened, closed
             or reduced with guaranteed Stop Loss Orders.
+        quote_guaranteed_execution_fee: :class:`~async_v20.DecimalNumber`
+            The total guaranteed execution fees charged for all Trades opened, closed
+            or reduced with guaranteed Stop Loss Orders, in the Instrument's quote currency.
         account_balance: :class:`~async_v20.AccountUnits`
             The Account's balance after the Order was filled.
         trade_opened: :class:`~async_v20.TradeOpen`
@@ -3741,12 +3797,19 @@ class OrderFillTransaction(Transaction, type=TransactionType('ORDER_FILL')):
         trade_reduced: :class:`~async_v20.TradeReduce`
             The Trade that was reduced when the Order was filled (only
             provided if filling the Order resulted in reducing an open Trade).
-        half_spread_cost:
+        half_spread_cost: :class:`~async_v20.DecimalNumber`
             The half spread cost for the OrderFill, which is the sum of the
             halfSpreadCost values in the tradeOpened, tradesClosed and tradeReduced
             fields. This can be a positive or negative value and is represented in
             the home currency of the Account.
-
+        pl_home_conversion_cost: :class:`~async_v20.DecimalNumber`
+            Unknown Purpose
+        base_financing_home_conversion_cost: :class:`~async_v20.DecimalNumber`
+            Unknown Purpose
+        guaranteed_execution_fee_home_conversion_cost: :class:`~async_v20.DecimalNumber`
+            Unknown Purpose
+        home_conversion_cost: :class:`~async_v20.DecimalNumber`
+            Unoown Purpose
     """
 
     def __init__(self, id: TransactionID = sentinel, time: DateTime = sentinel, user_id: int = sentinel,
@@ -3754,16 +3817,25 @@ class OrderFillTransaction(Transaction, type=TransactionType('ORDER_FILL')):
                  order_id: OrderID = sentinel, client_order_id: ClientID = sentinel,
                  instrument: InstrumentName = sentinel, units: DecimalNumber = sentinel, price: PriceValue = sentinel,
                  full_price: ClientPrice = sentinel, reason: OrderFillReason = sentinel, pl: AccountUnits = sentinel,
-                 financing: AccountUnits = sentinel, commission: AccountUnits = sentinel,
+                 quote_pl: DecimalNumber = sentinel, financing: AccountUnits = sentinel,
+                 base_financing: DecimalNumber = sentinel, quote_financing: DecimalNumber = sentinel,
+                 commission: AccountUnits = sentinel,
                  account_balance: AccountUnits = sentinel,
                  trade_opened: TradeOpen = sentinel, trades_closed: ArrayTradeReduce = sentinel,
                  trade_reduced: TradeReduce = sentinel,
                  gain_quote_home_conversion_factor: DecimalNumber = sentinel,
                  loss_quote_home_conversion_factor: DecimalNumber = sentinel,
+                 home_conversion_factors: HomeConversionFactors = sentinel,
                  guaranteed_execution_fee: AccountUnits = sentinel,
+                 quote_guaranteed_execution_fee: DecimalNumber = sentinel,
                  half_spread_cost: AccountUnits = sentinel,
                  requested_units: AccountUnits = sentinel,
-                 full_vwap: DecimalNumber = sentinel):
+                 full_vwap: DecimalNumber = sentinel,
+                 pl_home_conversion_cost: DecimalNumber = sentinel,
+                 base_financing_home_conversion_cost: DecimalNumber = sentinel,
+                 guaranteed_execution_fee_home_conversion_cost: DecimalNumber = sentinel,
+                 home_conversion_cost: DecimalNumber = sentinel
+                 ):
         Model.__init__(**locals())
 
 
@@ -3973,7 +4045,7 @@ class LimitOrderTransaction(Transaction, type=TransactionType('LIMIT_ORDER')):
             The ID of the Transaction that cancels the replaced
             Order (only provided if this Order replaces an existing Order).
         partial_fill: = positionFill (seems to be a mismatch in Oanda documentation)
-
+        trigger_mode: :class:`str`
     """
 
     def __init__(self, instrument: InstrumentName, units: DecimalNumber, price: PriceValue,
@@ -3986,7 +4058,8 @@ class LimitOrderTransaction(Transaction, type=TransactionType('LIMIT_ORDER')):
                  take_profit_on_fill: TakeProfitDetails = sentinel, stop_loss_on_fill: StopLossDetails = sentinel,
                  trailing_stop_loss_on_fill: TrailingStopLossDetails = sentinel,
                  trade_client_extensions: ClientExtensions = sentinel, replaces_order_id: OrderID = sentinel,
-                 cancelling_transaction_id: TransactionID = sentinel, partial_fill: OrderPositionFill = sentinel):
+                 cancelling_transaction_id: TransactionID = sentinel, partial_fill: OrderPositionFill = sentinel,
+                 trigger_mode: str = sentinel):
         Model.__init__(**locals())
 
 
@@ -4176,7 +4249,7 @@ class StopOrderTransaction(Transaction, type=TransactionType('STOP_ORDER')):
         cancelling_transaction_id: :class:`~async_v20.TransactionID`
             The ID of the Transaction that cancels the replaced
             Order (only provided if this Order replaces an existing Order).
-
+        trigger_mode: :class:`str`
     """
 
     def __init__(self, instrument: InstrumentName, units: DecimalNumber, price: PriceValue,
@@ -4190,7 +4263,8 @@ class StopOrderTransaction(Transaction, type=TransactionType('STOP_ORDER')):
                  take_profit_on_fill: TakeProfitDetails = sentinel, stop_loss_on_fill: StopLossDetails = sentinel,
                  trailing_stop_loss_on_fill: TrailingStopLossDetails = sentinel,
                  trade_client_extensions: ClientExtensions = sentinel, replaces_order_id: OrderID = sentinel,
-                 cancelling_transaction_id: TransactionID = sentinel):
+                 cancelling_transaction_id: TransactionID = sentinel,
+                 trigger_mode: str = sentinel):
         Model.__init__(**locals())
 
 

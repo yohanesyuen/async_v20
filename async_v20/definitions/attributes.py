@@ -47,6 +47,7 @@ instance_attributes = {'long': 'long', 'short': 'short', 'default': 'default', '
                        'withdrawalLimit': 'withdrawal_limit', 'marginCallMarginUsed': 'margin_call_margin_used',
                        'marginCallPercent': 'margin_call_percent', 'orders': 'orders', 'trades': 'trades',
                        'status': 'status', 'tradeable': 'tradeable',
+                       'homeConversionFactors': 'home_conversion_factors',
                        'quoteHomeConversionFactors': 'quote_home_conversion_factors',
                        'unitsAvailable': 'units_available', 'extensionNumber': 'extension_number',
                        'triggerCondition': 'trigger_condition', 'divisionID': 'division_id', 'siteID': 'site_id',
@@ -182,7 +183,13 @@ instance_attributes = {'long': 'long', 'short': 'short', 'default': 'default', '
                        'dividendAdjustment': 'dividend_adjustment',
                        'financing': 'financing',
                        'minimumGuaranteedStopLossDistance': 'minimum_guaranteed_stop_loss_distance',
-                       'guaranteedStopLossOrderExecutionPremium': 'guaranteed_stop_loss_order_execution_premium'
+                       'guaranteedStopLossOrderExecutionPremium': 'guaranteed_stop_loss_order_execution_premium',
+                       'triggerMode': 'trigger_mode', 'quotePL': 'quote_pl', 'baseFinancing': 'base_financing',
+                       'quoteGuaranteedExecutionFee': 'quote_guaranteed_execution_fee',
+                       'plHomeConversionCost': 'pl_home_conversion_cost',
+                       'baseFinancingHomeConversionCost': 'base_financing_home_conversion_cost',
+                       'guaranteedExecutionFeeHomeConversionCost': 'guaranteed_execution_fee_home_conversion_cost',
+                       'homeConversionCost': 'home_conversion_cost'
                        }
 
 json_attributes = {'long': 'long', 'short': 'short', 'default': 'default', 'reduce_first': 'reduceFirst',
@@ -232,6 +239,7 @@ json_attributes = {'long': 'long', 'short': 'short', 'default': 'default', 'redu
                    'withdrawal_limit': 'withdrawalLimit', 'margin_call_margin_used': 'marginCallMarginUsed',
                    'margin_call_percent': 'marginCallPercent', 'orders': 'orders', 'trades': 'trades',
                    'status': 'status', 'tradeable': 'tradeable',
+                   'home_conversion_factors': 'homeConversionFactors',
                    'quote_home_conversion_factors': 'quoteHomeConversionFactors', 'units_available': 'unitsAvailable',
                    'extension_number': 'extensionNumber', 'trigger_condition': 'triggerCondition',
                    'division_id': 'divisionID', 'site_id': 'siteID', 'account_user_id': 'accountUserID',
@@ -282,5 +290,11 @@ json_attributes = {'long': 'long', 'short': 'short', 'default': 'default', 'redu
                    'dividend_adjustment': 'dividendAdjustment',
                    'financing': 'financing',
                    'minimum_guaranteed_stop_loss_distance': 'minimumGuaranteedStopLossDistance',
-                   'guaranteed_stop_loss_order_execution_premium': 'guaranteedStopLossOrderExecutionPremium'
+                   'guaranteed_stop_loss_order_execution_premium': 'guaranteedStopLossOrderExecutionPremium',
+                   'trigger_mode': 'triggerMode', 'quote_pl': 'quotePL', 'base_financing': 'baseFinancing',
+                   'quote_guaranteed_execution_fee': 'quoteGuaranteedExecutionFee',
+                   'pl_home_conversion_cost': 'plHomeConversionCost',
+                   'base_financing_home_conversion_cost': 'baseFinancingHomeConversionCost',
+                   'guaranteed_execution_fee_home_conversion_cost': 'guaranteedExecutionFeeHomeConversionCost',
+                   'home_conversion_cost': 'homeConversionCost'
                    }
